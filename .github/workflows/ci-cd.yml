@@ -11,34 +11,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    
+
     # Set up Node.js
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-    
+
+    # Set up Java (required for HTML validator)
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
     # Cache dependencies
     - name: Cache dependencies
       uses: actions/cache@v3
       with:
-        path: ~/.npm
+        path: |
+          ~/.npm
+          ~/validator
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
-    
-    # Install dependencies
-    - name: Install dependencies
-      run: npm install
 
+    # Install wget (for HTML validator download)
+    - name: Install wget
+      run: sudo apt-get install -y wget
 
-    # HTML validation using npm package
+    # HTML validation (most reliable method)
     - name: Validate HTML
       run: |
-        npm install -g vnu-jar
-        export PATH=$PATH:$(npm bin -g)
-        vnu --skip-non-html --errors-only index.html
-    
+        mkdir -p ~/validator
+        wget https://github.com/validator/validator/releases/latest/download/vnu.linux.zip -O ~/validator/vnu.zip
+        unzip ~/validator/vnu.zip -d ~/validator
+        java -jar ~/validator/dist/vnu.jar --skip-non-html --errors-only index.html
+
     # CSS validation
     - name: Validate CSS
       run: |
