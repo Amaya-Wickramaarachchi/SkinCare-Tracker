@@ -31,12 +31,14 @@ jobs:
     - name: Install dependencies
       run: npm install
 
+
     # HTML validation using npm package
     - name: Validate HTML
       run: |
         npm install -g vnu-jar
-        java -jar ~/vnu.jar --skip-non-html index.html
-
+        export PATH=$PATH:$(npm bin -g)
+        vnu --skip-non-html --errors-only index.html
+    
     # CSS validation
     - name: Validate CSS
       run: |
