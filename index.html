@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://browser.sentry-cdn.com/7.0.0/bundle.min.js"></script>
+<script>
+  Sentry.init({ dsn: 'YOUR_DSN_HERE' });
+  
+  // Capture unhandled promise rejections
+  window.addEventListener('unhandledrejection', event => {
+    Sentry.captureException(event.reason);
+  });
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Skincare Tracker</title>

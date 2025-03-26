@@ -6,14 +6,18 @@ let skincareData = {
 
 // Load data from localStorage
 function loadData() {
-    const savedData = localStorage.getItem('skincareData');
-    if (savedData) {
-        skincareData = JSON.parse(savedData);
+try {
+        const savedData = localStorage.getItem('skincareData');
+        if (savedData) {
+            console.log('Loaded existing skincare data');
+            skincareData = JSON.parse(savedData);
+        } else {
+            console.log('No existing skincare data found');
+        }
+    } catch (e) {
+        console.error('Error loading skincare data:', e);
     }
-    renderProducts();
-    renderHistory();
 }
-
 // Save data to localStorage
 function saveData() {
     localStorage.setItem('skincareData', JSON.stringify(skincareData));
@@ -70,6 +74,8 @@ function renderProducts() {
 // Mark product as used
 function markAsUsed(productId, time) {
     const product = skincareData.products.find(p => p.id == productId);
+    console.log(`Marking product ${productId} as used at ${time}`);
+
     if (product) {
         const timestamp = new Date().toISOString();
         skincareData.history.push({
