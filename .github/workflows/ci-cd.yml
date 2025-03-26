@@ -12,11 +12,16 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    # HTML validation using Docker (most reliable method)
+    # HTML validation using Docker (correct syntax)
     - name: Validate HTML with Docker
       run: |
-        docker run -v $(pwd):/data ghcr.io/validator/validator:latest \
-          --skip-non-html --errors-only /data/index.html
+        docker run \
+          -v "$(pwd):/data" \
+          ghcr.io/validator/validator:latest \
+          vnu \
+          --skip-non-html \
+          --errors-only \
+          /data/index.html
 
     # Set up Node.js
     - name: Set up Node.js
