@@ -12,49 +12,46 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    # Set up Node.js
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-
-    # Set up Java (required for HTML validator)
+    # Set up Java first (required for HTML validator)
     - name: Set up Java
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    # Cache dependencies
-    - name: Cache dependencies
-      uses: actions/cache@v3
+    # Set up Node.js
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
       with:
-        path: |
-          ~/.npm
-          ~/validator
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    # Install wget (for HTML validator download)
-    - name: Install wget
-      run: sudo apt-get install -y wget
+        node-version: '18'
 
     # HTML validation (most reliable method)
     - name: Validate HTML
       run: |
-        mkdir -p ~/validator
-        wget https://github.com/validator/validator/releases/latest/download/vnu.linux.zip -O ~/validator/vnu.zip
-        unzip ~/validator/vnu.zip -d ~/validator
-        java -jar ~/validator/dist/vnu.jar --skip-non-html --errors-only index.html
+        # Download the validator directly from W3C
+        mkdir -p ~/html-validator
+        curl -sL https://validator.w3.org/nu/jar/vnu.jar -o ~/html-validator/vnu.jar
+        
+        # Run validation (skip non-HTML files)
+        java -jar ~/html-validator/vnu.jar --skip-non-html --errors-only index.html
 
-    # CSS validation
+    # Rest of your workflow remains the same...
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install dependencies
+      run: npm install
+
     - name: Validate CSS
       run: |
         npm install -g css-validator
         css-validator style.css
 
-    # JavaScript linting
     - name: Lint JavaScript
       uses: github/super-linter@v4
       env:
@@ -62,15 +59,12 @@ jobs:
         DEFAULT_BRANCH: main
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Security scanning
     - name: Run ESLint security audit
       run: npx eslint-plugin-security .
 
-    # Dependency vulnerability scanning
     - name: Audit npm packages
       run: npm audit
 
-    # Quality gate for vulnerabilities
     - name: Check for vulnerabilities
       if: ${{ failure() && steps.audit.outcome == 'failure' }}
       run: exit 1
